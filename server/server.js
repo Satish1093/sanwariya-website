@@ -33,11 +33,13 @@ const orderRoutes = require('./routes/orderRoutes');
 const otpRoutes = require('./routes/otpRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
+
+
 app.use('/api/bookings', bookingRoute);
 app.use('/api/contact', contactRoute);
 app.use('/api/dishes', dishRoutes);
 app.use('/api/events', eventBookings);
-app.use('/api/upload', imageUploadRoutes);
+app.use('/api/images', imageUploadRoutes);
 app.use('/api/meals', mealBookingRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/otp', otpRoutes);

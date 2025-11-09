@@ -65,7 +65,7 @@ function EventBooking() {
     }
 
     try {
-      await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/event-bookings`, formData);
+      await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/events`, formData);
       toast.success('Event booking submitted successfully!');
       setFormData({
         name: '',

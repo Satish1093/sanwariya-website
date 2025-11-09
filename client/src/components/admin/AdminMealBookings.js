@@ -6,7 +6,7 @@ function AdminMealBookings() {
 
   const fetchBookings = () => {
     axios
-      .get(`${process.env.REACT_APP_API_BASE_URL}/api/meal-bookings`)
+      .get(`${process.env.REACT_APP_API_BASE_URL}/api/meals`)
       .then(res => setBookings(res.data))
       .catch(err => console.error('Failed to fetch meal bookings', err));
   };
@@ -18,7 +18,7 @@ function AdminMealBookings() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this booking?")) return;
     try {
-      await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/meal-bookings/${id}`);
+      await axios.delete(`${process.env.REACT_APP_API_BASE_URL}/api/meals/${id}`);
       fetchBookings();
     } catch (err) {
       console.error("Failed to delete meal booking:", err);
