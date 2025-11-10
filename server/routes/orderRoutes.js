@@ -108,9 +108,13 @@ router.post('/', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('❌ Order Error:', err.message || err);
-    res.status(500).json({ message: 'Error processing order' });
-  }
+  console.error("❌ ORDER ERROR DETAILS:", err);
+  res.status(500).json({
+    message: "Error processing order",
+    error: err.message,
+    stack: err.stack
+  });
+}
 });
 
 router.get('/', async (req, res) => {
@@ -139,6 +143,14 @@ router.delete('/:id', async (req, res) => {
     console.error('Delete error:', error.message);
     res.status(500).json({ message: 'Failed to delete order' });
   }
+});
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, // Gmail App Password here
+  },
 });
 
 module.exports = router;

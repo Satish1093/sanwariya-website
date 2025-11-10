@@ -74,7 +74,7 @@ function MealBooking() {
     }
 
     try {
-      await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/meal-bookings`, formData);
+      await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/meals`, formData);
       toast.success('Meal reservation submitted successfully!');
       setFormData({
         name: '',

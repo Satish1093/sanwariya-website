@@ -24,6 +24,7 @@ const AddDish = () => {
       });
       const data = await res.json();
       setImage(data.imageUrl);
+      
     } catch (err) {
       console.error("Image upload failed:", err);
       alert("❌ Image upload failed.");
