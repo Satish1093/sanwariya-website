@@ -1,76 +1,65 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
-const dotenv = require('dotenv');
-const Otp = require('../models/Otp');
-dotenv.config();
+const sgMail = require('@sendgrid/mail');
 
-function generateOTP() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
+// Initialize SendGrid with API key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+// Temporary in-memory OTP store (replace with DB for production)
+const otpStore = new Map();
+
+// Helper to generate 6-digit OTP
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// ✅ Send OTP to Email
 router.post('/send-email-otp', async (req, res) => {
   const { email } = req.body;
-  if (!email) return res.status(400).json({ message: 'Email is required' });
 
-  const otp = generateOTP();
-  console.log("Sending OTP to", email);
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
 
   try {
-    await Otp.findOneAndDelete({ email });
-    await Otp.create({ email, otp });
+    const otp = generateOTP();
+    otpStore.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
-    // ✅ FIXED TRANSPORTER CONFIG
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.sendgrid.net',
-      port: 587,
-      auth: {
-        user: 'apikey',
-        pass: process.env.SENDGRID_API_KEY
-      }
-    });
-
-    // ✅ FIXED MAIL OPTIONS
-    const mailOptions = {
-      from: `"Sanwariya Hotel" <mewadas494@gmail.com>`,
+    const msg = {
       to: email,
+      from: 'sanwariyahotel@outlook.com', // use verified email from SendGrid
       subject: 'Sanwariya Hotel OTP Verification',
-      text: `Your Sanwariya Hotel OTP is ${otp}. It is valid for 5 minutes.`,
       html: `
-        <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-          <h2 style="color: #2c3e50;">Hello,</h2>
-          <p>Your One-Time Password (OTP) for booking with <b>Sanwariya Hotel</b> is:</p>
-          <h1 style="color: #e74c3c;">${otp}</h1>
-          <p>This code is valid for <b>5 minutes</b>.</p>
-          <br/>
-          <p>If you did not request this, please ignore this email.</p>
-          <br/>
-          <p>Thank you,<br/>Sanwariya Hotel Team</p>
-        </div>
+        <h3>Hello,</h3>
+        <p>Your OTP for booking verification is:</p>
+        <h1 style="color:#ff9900;">${otp}</h1>
+        <p>This code is valid for <strong>5 minutes</strong>.</p>
+        <p>If you didn’t request this, please ignore this email.</p>
+        <p>— Sanwariya Hotel Team</p>
       `,
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log("✅ OTP email sent successfully!");
-    res.json({ message: 'OTP sent successfully' });
-
+    await sgMail.send(msg);
+    console.log(`✅ OTP sent successfully to ${email}`);
+    res.status(200).json({ message: 'OTP sent successfully!' });
   } catch (err) {
-    console.error('❌ OTP error:', err.message);
-    res.status(500).json({ message: 'Failed to send OTP' });
+    console.error('❌ OTP sending failed:', err.message);
+    res.status(500).json({ message: 'Failed to send OTP email' });
   }
 });
 
-// Verify OTP
-router.post('/verify-email-otp', async (req, res) => {
+// ✅ Verify OTP
+router.post('/verify-email-otp', (req, res) => {
   const { email, otp } = req.body;
-  const record = await Otp.findOne({ email });
+  const record = otpStore.get(email);
 
-  if (record && record.otp === otp) {
-    await Otp.deleteOne({ email });
-    res.json({ message: 'OTP verified successfully' });
-  } else {
-    res.status(400).json({ message: 'Invalid or expired OTP' });
+  if (!record) return res.status(400).json({ message: 'OTP not found or expired' });
+  if (Date.now() > record.expiresAt) {
+    otpStore.delete(email);
+    return res.status(400).json({ message: 'OTP expired' });
   }
+  if (record.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
+
+  otpStore.delete(email);
+  res.status(200).json({ message: 'OTP verified successfully!' });
 });
 
 module.exports = router;

@@ -4,9 +4,9 @@
   "description": "Sanwariya Hotel Backend API",
   "main": "server.js",
   "scripts": {
-  "start": "node server.js",
-  "dev": "nodemon server.js"
-},
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
   "author": "Sanwariya Team",
   "license": "ISC",
   "keywords": [],
